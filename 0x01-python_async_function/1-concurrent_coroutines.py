@@ -28,8 +28,8 @@ async def wait_n(n: int, max_delay: int) -> list[float]:
     Returns:
         list[float]: [description]
     """
-    list_delays: List[float] = []
-    tasks_delay: List[asyncio.Task] = []
+    list_delays = []
+    tasks_delay = []
 
     for _ in range(n):
         task = wait_random(max_delay)
