@@ -28,18 +28,13 @@ async def wait_n(n: int, max_delay: int) -> list[float]:
     Returns:
         List[float]: List of delays in ascending order.
     """
-    list_delays = []
-    tasks_delay = []
+    tasks = [wait_random(max_delay) for _ in range(n)]
 
-    for _ in range(n):
-        task = wait_random(max_delay)
-        tasks_delay.append(task)
+    # Use asyncio.gather for simplicity and conciseness
+    completed_tasks = [await task for task in asyncio.as_completed(tasks)]
 
-    for completed_task in asyncio.as_completed(tasks_delay):
-        delay = await completed_task
-        list_delays.append(delay)
+    return completed_tasks
 
-    return list_delays
 
 # if __name__ == "__main__":
 #     print(asyncio.run(wait_n(5, 5)))
