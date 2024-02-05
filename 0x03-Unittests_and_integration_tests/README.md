@@ -2,7 +2,7 @@
 
 ## 0x03. Unittests and Integration Tests
 
-## UnitTests -- Back-end -- Integration testsneer at Cruise
+## UnitTests -- Back-end -- Integration tests
 
 Unit testing is the process of testing that a particular function returns expected results for different set of inputs. A unit test is supposed to test standard inputs and corner cases. A unit test should only test the logic defined inside the tested function. Most calls to additional functions should be mocked, especially if they make network or database calls.
 
