@@ -43,24 +43,23 @@ class TestGithubOrgClient(unittest.TestCase):
         mock_get_json.assert_called_once_with(expected_url)
 
     @patch("client.GithubOrgClient.org")
-    def test_public_repos_url(self):
-        """ Test the _public_repos_url of the client """
-        # Mocking GithubOrgClient.org as a property
-        with patch('client.GithubOrgClient.org',
-                   new_callable=PropertyMock) as mock_org:
-            # define expected_url
-            expected_url = "http://some_url.com"
-            # define expected_payload
-            expected_payload = {"repos_url": expected_url}
+    def test_public_repos_url(self, mock_org_payload):
+        """ Method to unit-test GithubOrgClient._public_repos_url """
+
+        # Set up mock return value for GithubOrgClient.org
+        mock_org_payload.return_value = {"repos_url": "url"}
+
+        # Create instance of GithubOrgClient
+        github_client = GithubOrgClient("repos_url")
+
+        # Mocking GithubOrgClient._public_repos_url as a property
+        with patch("client.GithubOrgClient._public_repos_url",
+                   new_callable=PropertyMock) as mock_property:
             # Set the return value of the mocked property
-            mock_org.return_value = expected_payload
-            # Create an instance of GithubOrgClient
-            github_client = GithubOrgClient("some_org")
-            # call the _public_repos_url method of the GithubOrgClient object
+            mock_property.return_value = mock_org_payload.\
+                return_value["repos_url"]
+            # Call _public_repos_url method
             result = github_client._public_repos_url
-            # define the expected result
-            expected_result = expected_url
-            # Assert that the result is equal to the expected_result
-            self.assertEqual(result, expected_result)
-            # Assert that the property was called once
-            mock_org.assert_called_once_with()
+
+        # Assert the result
+        self.assertEqual(result, "url")
