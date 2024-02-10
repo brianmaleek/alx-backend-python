@@ -12,9 +12,10 @@
 - Of course, no external HTTP calls should be made.
 """
 import unittest
-from unittest.mock import patch, PropertyMock
-from parameterized import parameterized
+from unittest.mock import patch, PropertyMock, Mock
+from parameterized import parameterized, parameterized_class
 from client import GithubOrgClient
+from fixtures import TEST_PAYLOAD
 
 
 class TestGithubOrgClient(unittest.TestCase):
@@ -99,3 +100,42 @@ class TestGithubOrgClient(unittest.TestCase):
         """ Method to unit-test GithubOrgClient.has_license """
         result = GithubOrgClient.has_license(repo, license_key)
         self.assertEqual(result, expected)
+
+
+@parameterized_class(("org_payload", "repos_payload", "expected_repos", "apache2_repos"), TEST_PAYLOAD)
+class TestIntegrationGithubOrgClient(unittest.TestCase):
+    """Integration tests for GithubOrgClient"""
+
+    @classmethod
+    def setUpClass(TestSuite):
+        """Set up class for integration tests"""
+        # Patching requests.get to mock external requests
+        TestSuite.get_patcher = patch('requests.get')
+        TestSuite.mock_get = TestSuite.get_patcher.start()
+        # Mocking the side effects of requests.get to return predefined payloads
+        TestSuite.mock_get.side_effect = [
+            Mock(json=Mock(return_value=TestSuite.org_payload)),
+            Mock(json=Mock(return_value=TestSuite.repos_payload)),
+        ]
+        # Creating an instance of GithubOrgClient
+        TestSuite.client = GithubOrgClient('google')
+
+    @classmethod
+    def tearDownClass(TestSuite):
+        """Tear down class after integration tests"""
+        # Stopping the patcher
+        TestSuite.get_patcher.stop()
+
+    def test_public_repos(TestSuite):
+        """Test the public_repos method of GithubOrgClient"""
+        # Call public_repos method without specifying a license
+        result = TestSuite.client.public_repos()
+        # Assert that the result matches the expected repositories
+        TestSuite.assertEqual(result, TestSuite.expected_repos)
+
+    def test_public_repos_with_license(TestSuite):
+        """Test the public_repos method of GithubOrgClient with a license parameter"""
+        # Call public_repos method with 'apache-2.0' license filter
+        result = TestSuite.client.public_repos(license="apache-2.0")
+        # Assert that the result matches the expected repositories with Apache 2.0 license
+        TestSuite.assertEqual(result, TestSuite.apache2_repos)
