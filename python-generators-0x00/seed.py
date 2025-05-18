@@ -79,8 +79,10 @@ def insert_data(connection, data):
         insert_query = """
             INSERT INTO users (user_id, name, email, age)
             VALUES (%s, %s, %s, %s)
-        """, (str(uuid.uuid4()), data['name'], data['email'], data['age'])
-        cursor.execute(insert_query, data)
+        """
+        # Create parameters tuple
+        params = (str(uuid.uuid4()), data['name'], data['email'], data['age'])
+        cursor.execute(insert_query, params)
         connection.commit()
         print(f"{cursor.rowcount} records inserted successfully")
         cursor.close()
