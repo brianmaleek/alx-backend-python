@@ -37,7 +37,7 @@ def paginate_users(page_size: int, offset: int = 0) -> List[Tuple]:
         if 'connection' in locals() and connection.is_connected():
             connection.close()
 
-def lazy_paginate(page_size: int) -> Generator[List[Tuple], None, None]:
+def lazy_pagination(page_size: int) -> Generator[List[Tuple], None, None]:
     """
     Generator function that yields pages of user data lazily
     Args:
