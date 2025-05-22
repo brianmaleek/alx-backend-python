@@ -23,7 +23,7 @@ def stream_users_in_batches(batch_size: int) -> Generator[List[Tuple], None, Non
         )
         
         with connection.cursor() as cursor:
-            cursor.execute("SELECT user_id, name, email, age FROM users")
+            cursor.execute("SELECT user_id, name, email, age FROM user_data")
             while True:
                 batch = cursor.fetchmany(batch_size)
                 if not batch:
