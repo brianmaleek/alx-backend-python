@@ -61,7 +61,7 @@ def create_table(connection):
     try:
         cursor = connection.cursor()
         create_table = """
-            CREATE TABLE IF NOT EXISTS users (
+            CREATE TABLE IF NOT EXISTS user_data (
                 user_id VARCHAR(36) PRIMARY KEY,
                 name VARCHAR(255) NOT NULL,
                 email VARCHAR(255) NOT NULL UNIQUE,
@@ -81,25 +81,24 @@ def create_table(connection):
             connection.rollback()
         return False
 
-def insert_data(connection, data):
-    # Insert data into the user_data table from the CSV file
+def insert_data(connection, csv_file):
     try:
         cursor = connection.cursor()
-        insert_query = """
-            INSERT INTO users (user_id, name, email, age)
-            VALUES (%s, %s, %s, %s)
-        """
-        # Create parameters tuple
-        params = (str(uuid.uuid4()), data['name'], data['email'], data['age'])
-        cursor.execute(insert_query, params)
+        with open(csv_file, 'r') as file:
+            # Use DictReader instead of reader
+            csv_reader = csv.DictReader(file)
+            for data in csv_reader:
+                params = (str(uuid.uuid4()), data['name'], data['email'], data['age'])
+                cursor.execute("""
+                    INSERT INTO user_data (user_id, name, email, age) 
+                    VALUES (%s, %s, %s, %s)
+                """, params)
         connection.commit()
-        print(f"{cursor.rowcount} records inserted successfully")
+        print("Data inserted successfully")
+    except Exception as e:
+        print(f"Error inserting data: {e}")
+    finally:
         cursor.close()
-    except mysql.connector.Error as err:
-        print(f"Error inserting data: {err}")
-        # Rollback incase of error
-        if connection.is_connected():
-            connection.rollback()
 
 def main():
     """ Main function to execute the script """
@@ -124,11 +123,7 @@ def main():
 
     # Read data from the CSV file and insert it into the users table
     try:
-        with open('user_data.csv', 'r') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                insert_data(prodev_connection, row)
-            print("Data inserted successfully from CSV file")
+        insert_data(prodev_connection, 'user_data.csv')
     except FileNotFoundError:
         print("CSV file not found. Please ensure the file exists in the same directory as this script.")
     except Exception as e:
