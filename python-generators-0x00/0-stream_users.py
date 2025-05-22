@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv(override=True)
-
 def stream_users():
     """
     Generator function that yields one row at a time from the users table
@@ -18,11 +17,12 @@ def stream_users():
             password=os.getenv("DATABASE_PASSWORD"),
             database="ALX_prodev"
         )
-        
+
+        # Check if the connection is successful        
         if connection.is_connected():
             cursor = connection.cursor()
             # Execute the query
-            cursor.execute("SELECT * FROM users")
+            cursor.execute("SELECT * FROM user_data")
             
             # Fetch one row at a time
             while True:
@@ -30,15 +30,11 @@ def stream_users():
                 if row is None:
                     break
                 yield row
+            #  Close the cursor and connection
+            cursor.close()
+            connection.close()
     except mysql.connector.Error as err:
         print(f"Error: {err}")
-    finally:
-        # Close the cursor and connection
-        if 'cursor' in locals():
-            cursor.close()
-        if 'connection' in locals() and connection.is_connected():
-            connection.close()
-
 if __name__ == "__main__":
     # Test the generator
     for user in stream_users():
