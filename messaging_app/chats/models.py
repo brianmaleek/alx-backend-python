@@ -10,6 +10,7 @@ class User(AbstractUser):
     
     user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True, db_index=True)
+    password = models.CharField(max_length=255)
     phone_number = models.CharField(
         max_length=15,
         blank=True,
@@ -78,18 +79,21 @@ class Message(models.Model):
         on_delete=models.CASCADE,
         related_name='sent_messages'
     )
-    content = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    message_body = models.TextField(help_text='The body of the message')
+    sent_at = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'chats_message'
-        ordering = ['-created_at']
+        ordering = ['-sent_at']
 
     def clean(self):
-        if not self.content.strip():
+        if not self.message_body.strip():
             raise ValidationError('Message content cannot be empty')
 
     def __str__(self):
-        preview = self.content[:30] + "..." if len(self.content) > 30 else self.content
-        return f"{self.sender.get_full_name()}: {preview}"
+        return f"Message from {self.sender.first_name} at {self.sent_at.strftime('%Y-%m-%d %H:%M')}"
+
+    def get_sender_name(self):
+        """Return the full name of the message sender."""
+        return f"{self.sender.first_name} {self.sender.last_name}"
