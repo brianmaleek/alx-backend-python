@@ -15,11 +15,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True,
         required=True,
-        style={'input_type': 'password'},
-        min_length=8,
-        error_messages={
-            'min_length': 'Password must be at least 8 characters long.'
-        }
+        style={'input_type': 'password'}
     )
     password_confirm = serializers.CharField(
         write_only=True,
@@ -32,32 +28,16 @@ class UserCreateSerializer(serializers.ModelSerializer):
         fields = ['user_id', 'email', 'password', 'password_confirm', 
                  'first_name', 'last_name', 'phone_number']
         read_only_fields = ['user_id']
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
 
     def validate(self, data):
-        # Check if passwords match
         if data['password'] != data['password_confirm']:
             raise serializers.ValidationError({
                 'password_confirm': 'Passwords do not match.'
             })
-        
-        # Validate password strength
-        try:
-            validate_password(data['password'])
-        except ValidationError as e:
-            raise serializers.ValidationError({
-                'password': list(e.messages)
-            })
-        
         return data
 
     def create(self, validated_data):
-        # Remove password_confirm from the data
         validated_data.pop('password_confirm')
-        
-        # Create user with hashed password
         user = User.objects.create_user(
             email=validated_data['email'],
             password=validated_data['password'],
@@ -66,83 +46,6 @@ class UserCreateSerializer(serializers.ModelSerializer):
             phone_number=validated_data.get('phone_number', '')
         )
         return user
-
-class UserUpdateSerializer(serializers.ModelSerializer):
-    """Serializer for updating user information"""
-    current_password = serializers.CharField(
-        write_only=True,
-        required=False,
-        style={'input_type': 'password'}
-    )
-    new_password = serializers.CharField(
-        write_only=True,
-        required=False,
-        style={'input_type': 'password'},
-        min_length=8,
-        error_messages={
-            'min_length': 'Password must be at least 8 characters long.'
-        }
-    )
-    new_password_confirm = serializers.CharField(
-        write_only=True,
-        required=False,
-        style={'input_type': 'password'}
-    )
-
-    class Meta:
-        model = User
-        fields = ['email', 'first_name', 'last_name', 'phone_number',
-                 'current_password', 'new_password', 'new_password_confirm']
-        read_only_fields = ['email']
-
-    def validate(self, data):
-        # Check if user is trying to change password
-        if 'new_password' in data:
-            if 'current_password' not in data:
-                raise serializers.ValidationError({
-                    'current_password': 'Current password is required to set new password.'
-                })
-            
-            if 'new_password_confirm' not in data:
-                raise serializers.ValidationError({
-                    'new_password_confirm': 'Please confirm your new password.'
-                })
-            
-            # Check if new passwords match
-            if data['new_password'] != data['new_password_confirm']:
-                raise serializers.ValidationError({
-                    'new_password_confirm': 'New passwords do not match.'
-                })
-            
-            # Validate new password strength
-            try:
-                validate_password(data['new_password'])
-            except ValidationError as e:
-                raise serializers.ValidationError({
-                    'new_password': list(e.messages)
-                })
-            
-            # Verify current password
-            if not self.instance.check_password(data['current_password']):
-                raise serializers.ValidationError({
-                    'current_password': 'Current password is incorrect.'
-                })
-        
-        return data
-
-    def update(self, instance, validated_data):
-        # Handle password update
-        if 'new_password' in validated_data:
-            instance.set_password(validated_data.pop('new_password'))
-            validated_data.pop('current_password', None)
-            validated_data.pop('new_password_confirm', None)
-        
-        # Update other fields
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        
-        instance.save()
-        return instance
 
 class MessageSerializer(serializers.ModelSerializer):
     """Serializer for the Message model"""
@@ -180,7 +83,6 @@ class ConversationCreateSerializer(serializers.ModelSerializer):
         participant_ids = validated_data.pop('participant_ids')
         conversation = Conversation.objects.create(**validated_data)
         
-        # Add participants
         for user_id in participant_ids:
             try:
                 user = User.objects.get(user_id=user_id)
@@ -198,7 +100,6 @@ class MessageCreateSerializer(serializers.ModelSerializer):
         read_only_fields = ['message_id']
 
     def validate(self, data):
-        # Check if the sender is a participant in the conversation
         request = self.context.get('request')
         if request and request.user:
             if not data['conversation'].participants.filter(user_id=request.user.user_id).exists():
