@@ -60,11 +60,16 @@ class ConversationSerializer(serializers.ModelSerializer):
     """Serializer for the Conversation model"""
     participants = UserSerializer(many=True, read_only=True)
     messages = MessageSerializer(many=True, read_only=True)
+    participant_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Conversation
-        fields = ['conversation_id', 'participants', 'messages', 'created_at', 'updated_at']
+        fields = ['conversation_id', 'participants', 'messages', 'created_at', 
+                 'updated_at', 'participant_count']
         read_only_fields = ['conversation_id', 'created_at', 'updated_at']
+
+    def get_participant_count(self, obj):
+        return obj.participants.count()
 
 class ConversationCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating a new conversation"""
