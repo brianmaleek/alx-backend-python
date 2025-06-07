@@ -1,5 +1,5 @@
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter, routers
+from rest_framework.routers import DefaultRouter
 from rest_framework_nested import routers as nested_routers
 from .views import ConversationViewSet, MessageViewSet, UserViewSet
 
@@ -13,7 +13,7 @@ conversations_router = nested_routers.NestedDefaultRouter(router, r'conversation
 conversations_router.register(r'messages', MessageViewSet, basename='conversation-messages')
 
 # Create regular router for user endpoints
-auth_router = routers.DefaultRouter()
+auth_router = DefaultRouter()
 auth_router.register(r'users', UserViewSet, basename='user')
 
 # main urlpatterns
