@@ -17,10 +17,20 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from chats.urls import auth_urlpatterns, main_urlpatterns
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+from chats.auth import CustomTokenObtainPairView
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-auth/', include(auth_urlpatterns)),
     path('api/', include(main_urlpatterns)),
+
+    # JWT Authentication endpoints
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/custom-token/', CustomTokenObtainPairView.as_view(), name='custom_token_obtain_pair'),
 ]

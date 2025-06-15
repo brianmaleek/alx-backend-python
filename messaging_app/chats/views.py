@@ -14,16 +14,35 @@ from .serializers import (
     MessageSerializer,
     MessageCreateSerializer
 )
+from .permissions import (
+    IsParticipantOfConversation,
+    IsOwnerOfConversation,
+    IsOwnerOfMessage
+)
 
-# Create your views here.
 class UserViewSet(viewsets.ModelViewSet):
     """
     ViewSet for viewing and creating users
     """
     queryset = User.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_permissions(self):
+        """
+        Allow anyone to create a user (register)
+        but require authentication for other actions
+        """
+        if self.action == 'create':
+            return [permissions.AllowAny()]
+        return super().get_permissions()
+
+    def get_serializer_class(self):
+        """Return appropriate serializer class"""
+        if self.action == 'create':
+            return UserCreateSerializer
+        return UserSerializer
 
     def get_queryset(self):
         """Filter users by email or name"""
@@ -40,7 +59,11 @@ class ConversationViewSet(viewsets.ModelViewSet):
     """
     ViewSet for viewing and creating conversations
     """
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [
+        permissions.IsAuthenticated,
+        IsParticipantOfConversation,
+        IsOwnerOfConversation
+    ]
     serializer_class = ConversationSerializer
     lookup_field = 'conversation_id'
 
@@ -58,7 +81,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
         """Create a new conversation"""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        conversation = serializer.save()
+        conversation = serializer.save(owner=request.user)
         
         # Add the current user as a participant
         conversation.participants.add(request.user)
@@ -95,7 +118,11 @@ class MessageViewSet(viewsets.ModelViewSet):
     """
     ViewSet for viewing and creating messages
     """
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [
+        permissions.IsAuthenticated,
+        IsParticipantOfConversation,
+        IsOwnerOfMessage
+    ]
     serializer_class = MessageSerializer
 
     def get_queryset(self):
@@ -116,7 +143,7 @@ class MessageViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         
         # Add the sender (current user) to the message
-        message = serializer.save(sender=request.user)
+        message = serializer.save(user=request.user)
         
         # Return the message with all its data
         return_serializer = MessageSerializer(message)
