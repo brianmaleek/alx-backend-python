@@ -1,7 +1,7 @@
 # Dockerfile
 
-# Use python: 3.12.7 as the base image
-FROM python:3.12.7
+# Use python: 3.10 as the base image
+FROM python:3.10-slim
 
 # Set the environment variable
 ENV PYTHONUNBUFFERED=1
@@ -27,5 +27,5 @@ COPY . /app/
 # Expose the port the app runs on
 EXPOSE 8000
 
-Default command to run the application
+# Default command to run the application
 CMD ["python", "manage.py", "runserver", "0.0.0:8000"]
