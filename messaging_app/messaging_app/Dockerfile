@@ -14,12 +14,17 @@ WORKDIR /app
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     build-essential \
+    default-libmysqlclient-dev \
     libpq-dev \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file
 COPY requirements.txt /app/
-RUN pip install --upgrade pip && pip install -r requirements.txt
+
+# Install Python dependencies
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install -r requirements.txt --no-cache-dir
 
 # Copy the application code to another container directory
 COPY . /app/
@@ -28,4 +33,4 @@ COPY . /app/
 EXPOSE 8000
 
 # Default command to run the application
-CMD ["python", "manage.py", "runserver", "-p", "0.0.0.0:8000"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
