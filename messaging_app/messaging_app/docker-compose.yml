@@ -15,11 +15,6 @@ services:
       - db_data:/var/lib/mysql
     ports:
       - "3306:3306"
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
 
   web:
     build: .
@@ -33,8 +28,13 @@ services:
     env_file:
       - .env
     environment:
-      - DB_HOST=db
-      - DB_PORT=3306
+      DJANGO_DB_HOST: db
+      DJANGO_DB_PORT: 3306
+      DJANGO_DB_NAME: ${MYSQL_DATABASE}
+      DJANGO_DB_USER: ${MYSQL_USER}
+      DJANGO_DB_PASSWORD: ${MYSQL_PASSWORD}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DJANGO_DEBUG: ${DJANGO_DEBUG}
 
 volumes:
   db_data:
