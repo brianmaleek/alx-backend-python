@@ -10,7 +10,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Checkout code from GitHub
-                git credentialsId: 'brianmaleek', url: 'https://github.com/brianmaleek/alx-backend-python/tree/main/messaging_app.git'
+                git credentialsId: '${env.GITHUB_CREDENTIALS_ID}', url: 'https://github.com/brianmaleek/alx-backend-python/tree/main/messaging_app.git', branch: 'main' 
             }
         }
         stage('Set up Python & Install Dependencies') {
@@ -19,8 +19,8 @@ pipeline {
                 sh '''
                     python3 -m venv ${VENV_DIR}
                     . ${VENV_DIR}/bin/activate
-                    pip install --upgrade pip
-                    pip install -r messaging_app/requirements.txt
+                    pip3 install --upgrade pip
+                    pip3 install -r messaging_app/requirements.txt
                 '''
             }
         }
