@@ -1,0 +1,64 @@
+name: Django CI
+
+on:
+    push:
+        branches:
+        - main
+    pull_request:
+        branches:
+        - main
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+
+        services:
+            mysql:
+                image: mysql:8.0
+                env:
+                    MYSQL_DB: ${MYSQL_DB}
+                    MYSQL_USER: ${MYSQL_USER}
+                    MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+                    MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+                ports:
+                - 3306:3306
+                options: >-
+                    --health-cmd="mysqladmin ping --silent"
+                    --health-interval=10s
+                    --health-timeout=5s
+                    --health-retries=3
+
+        env:
+            DJANGO_DB_HOST: 127.0.0.1
+            DJANGO_DB_PORT: 3306
+            DJANGO_DB_NAME: ${MYSQL_DB}
+            DJANGO_DB_USER: ${MYSQL_USER}
+            DJANGO_DB_PASSWORD: ${MYSQL_PASSWORD}
+
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v3
+
+        - name: Set up Python
+          uses: actions/setup-python@v4
+          with:
+            python-version: "3.12"
+
+        - name: Install dependencies
+          run: |
+            python3 -m pip install --upgrade pip
+            pip3 install -r messaging_app/requirements.txt
+
+        - name: Wait for MySQL
+          run: |
+            until mysqladmin ping -h"$DJANGO_DB_HOST" --silent; do
+              sleep 2
+            done
+
+        - name: Run Django migrations
+          run: python manage.py migrate
+          working-directory: messaging_app
+
+        - name: Run tests
+          run: python -m unittest
+          working-directory: messaging_app
