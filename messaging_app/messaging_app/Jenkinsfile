@@ -10,7 +10,13 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Checkout code from GitHub
-                git credentialsId: '${env.GITHUB_CREDENTIALS_ID}', url: 'https://github.com/brianmaleek/alx-backend-python/tree/main/messaging_app.git', branch: 'main' 
+                git credentialsId: '${env.GITHUB_CREDENTIALS_ID}', url: 'https://github.com/brianmaleek/alx-backend-python/tree/main/messaging_app.git'
+            }
+        }
+        stage('Show Git Branch') {
+            steps {
+                sh 'git branch'
+                sh 'git rev-parse --abbrev-ref HEAD'
             }
         }
         stage('Set up Python & Install Dependencies') {
