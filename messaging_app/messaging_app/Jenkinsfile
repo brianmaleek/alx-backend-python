@@ -2,8 +2,9 @@ pipeline {
     agent any
 
     environment {
-        // Set up a virtualenv directory
         VENV_DIR = 'venv'
+        DOCKER_IMAGE = 'brianmaleek/messaging_app:latest' // <-- Replace with your Docker Hub username
+        DOCKERHUB_CREDENTIALS = 'brianmaleek'      // <-- Replace with your Jenkins Docker Hub credentials ID
     }
 
     stages {
@@ -42,6 +43,22 @@ pipeline {
                 always {
                     // Archive the test report
                     junit 'report.xml'
+                }
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t ${DOCKER_IMAGE} messaging_app/'
+            }
+        }
+        stage('Push Docker Image') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASS')]) {
+                    sh '''
+                        echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
+                        docker push ${DOCKER_IMAGE}
+                        docker logout
+                    '''
                 }
             }
         }
